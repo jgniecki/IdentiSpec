@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace IdentiSpec;
+
+use IdentiSpec\Enum\ValidationStatus;
+use IdentiSpec\Exception\InconsistentValidationResult;
+use IdentiSpec\Registry\ValidatorRegistry;
+
+final readonly class IdentifierValidator
+{
+    public function __construct(private ValidatorRegistry $registry)
+    {
+    }
+
+    public function validate(
+        IdentifierInput $input,
+        ?ValidationOptions $options = null,
+    ): ValidationResult {
+        $validator = $this->registry->find($input->key());
+
+        if ($validator === null) {
+            return ValidationResult::unsupported($input->key());
+        }
+
+        $result = $validator->validate(
+            $input->value(),
+            $options ?? new ValidationOptions(),
+        );
+
+        $expectedKey = $validator->definition()->key();
+
+        if (!$result->key()->equals($expectedKey)) {
+            throw InconsistentValidationResult::mismatchedKey(
+                $expectedKey->toString(),
+                $result->key()->toString(),
+            );
+        }
+
+        if ($result->status() === ValidationStatus::UNSUPPORTED) {
+            throw InconsistentValidationResult::unsupportedFromRegisteredValidator(
+                $expectedKey->toString(),
+            );
+        }
+
+        return $result;
+    }
+}

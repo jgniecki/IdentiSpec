@@ -1,0 +1,47 @@
+{
+  "name": "identispec/core",
+  "description": "Deterministic offline validation of jurisdiction-governed identifiers with normalization and structured issue reporting",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.2.0"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1",
+    "phpstan/phpstan-phpunit": "^2.0",
+    "phpunit/phpunit": "^11.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "IdentiSpec\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "IdentiSpec\\Tests\\": "tests/"
+    }
+  },
+  "keywords": [
+    "identifier",
+    "validation",
+    "jurisdiction",
+    "nip",
+    "vat",
+    "normalization"
+  ],
+  "authors": [
+    {
+      "name": "IdentiSpec Contributors"
+    }
+  ],
+  "scripts": {
+    "validate-manifest": "composer validate --strict",
+    "test": "phpunit --configuration phpunit.xml.dist",
+    "analyse": "phpstan analyse --configuration phpstan.neon.dist --no-progress",
+    "check": [
+      "@validate-manifest",
+      "@test",
+      "@analyse"
+    ]
+  }
+}
