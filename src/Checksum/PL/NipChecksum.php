@@ -31,7 +31,7 @@ final readonly class NipChecksum
         }
 
         $expectedCheckDigit = $this->algorithm->calculate(substr($value, 0, 9));
-        $actualCheckDigit = (int) $value[9];
+        $actualCheckDigit = (int) substr($value, -1);
 
         return $expectedCheckDigit !== 10 && $expectedCheckDigit === $actualCheckDigit;
     }
