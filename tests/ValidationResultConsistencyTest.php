@@ -28,8 +28,8 @@ final class ValidationResultConsistencyTest extends TestCase
         $result->assertConsistentWith($definition);
 
         self::assertSame($definition->validationLevel(), $result->level());
-        self::assertSame($definition->metadata()->ruleSetId(), $result->metadata()?->ruleSetId());
-        self::assertSame($definition->metadata()->version(), $result->metadata()?->version());
+        self::assertSame($definition->metadata()->ruleSetId(), $result->metadata()->ruleSetId());
+        self::assertSame($definition->metadata()->version(), $result->metadata()->version());
     }
 
     public function testRejectsMismatchedValidationLevelForTheSameKey(): void
