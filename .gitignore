@@ -4,3 +4,4 @@
 /.phpstan.cache/
 /.idea/
 /docker/
+/docs/
