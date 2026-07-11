@@ -12,16 +12,17 @@ final readonly class CanonicalFormat
     /** @var non-empty-list<positive-int> */
     private array $lengths;
     private string $description;
-    private ?string $literalPrefix;
+    private PrefixDefinition $prefix;
 
     /**
      * @param list<int> $lengths
+     * @param PrefixDefinition|string|null $prefix A string is retained for backward compatibility and means REQUIRED.
      */
     public function __construct(
         string $description,
         private CharacterSet $characterSet,
         array $lengths,
-        ?string $literalPrefix = null,
+        PrefixDefinition|string|null $prefix = null,
     ) {
         $description = trim($description);
 
@@ -45,22 +46,28 @@ final readonly class CanonicalFormat
 
         sort($uniqueLengths);
 
-        if ($literalPrefix !== null) {
-            $literalPrefix = trim($literalPrefix);
+        if (is_string($prefix)) {
+            $prefix = PrefixDefinition::required($prefix);
+        }
 
-            if ($literalPrefix === '' || preg_match('/\A[A-Z0-9]+\z/', $literalPrefix) !== 1) {
-                throw new InvalidArgumentException('Literal prefix must use uppercase ASCII letters or digits.');
+        $prefix ??= PrefixDefinition::none();
+
+        if ($prefix->includedInCanonicalValue()) {
+            $literal = $prefix->literal();
+
+            if ($literal === null) {
+                throw new InvalidArgumentException('A canonical prefix requires a literal value.');
             }
 
             if (
                 $this->characterSet === CharacterSet::DIGITS
-                && preg_match('/\A[0-9]+\z/', $literalPrefix) !== 1
+                && preg_match('/\A[0-9]+\z/', $literal) !== 1
             ) {
-                throw new InvalidArgumentException('A DIGITS canonical format cannot declare a letter prefix.');
+                throw new InvalidArgumentException('A DIGITS canonical format cannot include a letter prefix.');
             }
 
             foreach ($uniqueLengths as $length) {
-                if (strlen($literalPrefix) > $length) {
+                if (strlen($literal) > $length) {
                     throw new InvalidArgumentException('Literal prefix cannot exceed a canonical length.');
                 }
             }
@@ -71,7 +78,7 @@ final readonly class CanonicalFormat
 
         $this->description = $description;
         $this->lengths = $normalizedLengths;
-        $this->literalPrefix = $literalPrefix;
+        $this->prefix = $prefix;
     }
 
     public function description(): string
@@ -90,8 +97,14 @@ final readonly class CanonicalFormat
         return $this->lengths;
     }
 
+    public function prefix(): PrefixDefinition
+    {
+        return $this->prefix;
+    }
+
+    /** @deprecated Use prefix()->literal(). */
     public function literalPrefix(): ?string
     {
-        return $this->literalPrefix;
+        return $this->prefix->literal();
     }
 }
