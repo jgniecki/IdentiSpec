@@ -32,9 +32,8 @@ final readonly class WeightedModulo implements ChecksumAlgorithm
             throw new InvalidArgumentException('Checksum modulus must be at least 2.');
         }
 
-        /** @var non-empty-list<positive-int> $normalizedWeights */
-        $normalizedWeights = array_values($weights);
-        $this->weights = $normalizedWeights;
+        /** @var non-empty-list<positive-int> $weights */
+        $this->weights = $weights;
     }
 
     public function calculate(
