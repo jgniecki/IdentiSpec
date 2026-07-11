@@ -20,6 +20,7 @@ final class WeightedModuloTest extends TestCase
         self::assertSame(5, $algorithm->calculate('526025099'));
     }
 
+    /** @param list<int> $weights */
     #[DataProvider('invalidConfigurations')]
     public function testRejectsInvalidConfiguration(array $weights, int $modulus): void
     {
