@@ -23,6 +23,7 @@ final class NipValidatorTest extends IdentifierTypeValidatorContractTestCase
         return new NipValidator();
     }
 
+    /** @return iterable<string> */
     protected function validExamples(): iterable
     {
         yield 'checksum-valid example 1' => '5260250995';
@@ -30,6 +31,7 @@ final class NipValidatorTest extends IdentifierTypeValidatorContractTestCase
         yield 'checksum-valid example 3' => '8567346215';
     }
 
+    /** @return iterable<string> */
     protected function invalidExamples(): iterable
     {
         yield 'empty' => '';
