@@ -130,18 +130,15 @@ final readonly class VatEuValidator implements IdentifierTypeValidator
         }
 
         $body = substr($normalizedValue, 2);
+        $digitPrefixLength = strspn($body, '0123456789');
 
-        for ($position = 0; $position < self::BODY_LENGTH; ++$position) {
-            $character = $body[$position];
-
-            if ($character < '0' || $character > '9') {
-                return ValidationResult::invalid(
-                    $this->definition,
-                    $normalizedValue,
-                    [new ValidationIssue(DiagnosticCode::invalidEmbeddedValue(), $position + 2)],
-                    transformations: $normalization->transformations(),
-                );
-            }
+        if ($digitPrefixLength !== self::BODY_LENGTH) {
+            return ValidationResult::invalid(
+                $this->definition,
+                $normalizedValue,
+                [new ValidationIssue(DiagnosticCode::invalidEmbeddedValue(), $digitPrefixLength + 2)],
+                transformations: $normalization->transformations(),
+            );
         }
 
         if (!$this->checksum->isValid($body)) {
