@@ -26,7 +26,10 @@ final class ValidationResultConsistencyTest extends TestCase
         $result = ValidationResult::valid($definition, 'OK');
 
         $result->assertConsistentWith($definition);
-        self::assertTrue(true);
+
+        self::assertSame($definition->validationLevel(), $result->level());
+        self::assertSame($definition->metadata()->ruleSetId(), $result->metadata()?->ruleSetId());
+        self::assertSame($definition->metadata()->version(), $result->metadata()?->version());
     }
 
     public function testRejectsMismatchedValidationLevelForTheSameKey(): void
