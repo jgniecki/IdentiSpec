@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace IdentiSpec\Definition;
 
 use IdentiSpec\Enum\IdentifierCategory;
+use IdentiSpec\Enum\PrefixPolicy;
 use IdentiSpec\Enum\ValidationCapability;
 use IdentiSpec\Enum\ValidationLevel;
 use IdentiSpec\Internal\ObjectList;
@@ -72,11 +73,15 @@ final readonly class IdentifierDefinition
             throw new InvalidArgumentException('FORMAT_AND_CHECKSUM requires the CHECKSUM capability.');
         }
 
-        if (
-            $this->canonicalFormat->literalPrefix() !== null
-            && !isset($indexedCapabilities[ValidationCapability::PREFIX->value])
-        ) {
-            throw new InvalidArgumentException('A literal prefix requires the PREFIX capability.');
+        $hasPrefixPolicy = $this->canonicalFormat->prefix()->policy() !== PrefixPolicy::NONE;
+        $hasPrefixCapability = isset($indexedCapabilities[ValidationCapability::PREFIX->value]);
+
+        if ($hasPrefixPolicy && !$hasPrefixCapability) {
+            throw new InvalidArgumentException('A non-NONE prefix policy requires the PREFIX capability.');
+        }
+
+        if (!$hasPrefixPolicy && $hasPrefixCapability) {
+            throw new InvalidArgumentException('The PREFIX capability requires a non-NONE prefix policy.');
         }
 
         $this->displayName = $displayName;
