@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace IdentiSpec;
 
-use IdentiSpec\Enum\ValidationStatus;
-use IdentiSpec\Exception\InconsistentValidationResult;
 use IdentiSpec\Registry\ValidatorRegistry;
 use SensitiveParameter;
 
@@ -28,21 +26,7 @@ final readonly class IdentifierValidator
             $input->value(),
             $options ?? new ValidationOptions(),
         );
-
-        $expectedKey = $validator->definition()->key();
-
-        if (!$result->key()->equals($expectedKey)) {
-            throw InconsistentValidationResult::mismatchedKey(
-                $expectedKey->toString(),
-                $result->key()->toString(),
-            );
-        }
-
-        if ($result->status() === ValidationStatus::UNSUPPORTED) {
-            throw InconsistentValidationResult::unsupportedFromRegisteredValidator(
-                $expectedKey->toString(),
-            );
-        }
+        $result->assertConsistentWith($validator->definition());
 
         return $result;
     }

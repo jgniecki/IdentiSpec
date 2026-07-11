@@ -12,6 +12,7 @@ use IdentiSpec\Diagnostic\ValidationIssue;
 use IdentiSpec\Diagnostic\ValidationWarning;
 use IdentiSpec\Enum\ValidationLevel;
 use IdentiSpec\Enum\ValidationStatus;
+use IdentiSpec\Exception\InconsistentValidationResult;
 use IdentiSpec\Internal\ObjectList;
 use IdentiSpec\Value\IdentifierKey;
 use InvalidArgumentException;
@@ -159,6 +160,51 @@ final readonly class ValidationResult
     public function metadata(): ?RuleSetMetadata
     {
         return $this->metadata;
+    }
+
+    public function assertConsistentWith(IdentifierDefinition $definition): void
+    {
+        $expectedKey = $definition->key();
+
+        if (!$this->key->equals($expectedKey)) {
+            throw InconsistentValidationResult::mismatchedKey(
+                $expectedKey->toString(),
+                $this->key->toString(),
+            );
+        }
+
+        if ($this->status === ValidationStatus::UNSUPPORTED) {
+            throw InconsistentValidationResult::unsupportedFromRegisteredValidator(
+                $expectedKey->toString(),
+            );
+        }
+
+        if ($this->level !== $definition->validationLevel()) {
+            throw InconsistentValidationResult::mismatchedLevel(
+                $expectedKey->toString(),
+                $definition->validationLevel()->value,
+                $this->level?->value,
+            );
+        }
+
+        if ($this->metadata === null) {
+            throw InconsistentValidationResult::missingMetadata($expectedKey->toString());
+        }
+
+        $expectedMetadata = $definition->metadata();
+
+        if (
+            $this->metadata->ruleSetId() !== $expectedMetadata->ruleSetId()
+            || $this->metadata->version() !== $expectedMetadata->version()
+        ) {
+            throw InconsistentValidationResult::mismatchedRuleSet(
+                $expectedKey->toString(),
+                $expectedMetadata->ruleSetId(),
+                $expectedMetadata->version(),
+                $this->metadata->ruleSetId(),
+                $this->metadata->version(),
+            );
+        }
     }
 
     public function isValid(): bool
