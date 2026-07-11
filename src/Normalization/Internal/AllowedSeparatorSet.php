@@ -24,6 +24,12 @@ final readonly class AllowedSeparatorSet
                 throw new InvalidArgumentException('Every separator must contain exactly one byte.');
             }
 
+            $ordinal = ord($separator);
+
+            if ($ordinal < 0x20 || $ordinal > 0x7E) {
+                throw new InvalidArgumentException('Separators must be printable ASCII characters.');
+            }
+
             if (self::isDigit($separator) || ($lettersAreCanonical && self::isLetter($separator))) {
                 throw new InvalidArgumentException('A canonical character cannot be configured as a separator.');
             }
