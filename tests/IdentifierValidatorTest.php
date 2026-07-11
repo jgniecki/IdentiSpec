@@ -59,8 +59,7 @@ final class IdentifierValidatorTest extends TestCase
             public function __construct(
                 private readonly IdentifierDefinition $definition,
                 private readonly IdentifierDefinition $otherDefinition,
-            ) {
-            }
+            ) {}
 
             public function definition(): IdentifierDefinition
             {
@@ -84,9 +83,7 @@ final class IdentifierValidatorTest extends TestCase
     {
         $definition = TestIdentifierTypeValidator::definitionFor();
         $strategy = new class ($definition) implements IdentifierTypeValidator {
-            public function __construct(private readonly IdentifierDefinition $definition)
-            {
-            }
+            public function __construct(private readonly IdentifierDefinition $definition) {}
 
             public function definition(): IdentifierDefinition
             {

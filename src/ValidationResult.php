@@ -12,8 +12,10 @@ use IdentiSpec\Diagnostic\ValidationIssue;
 use IdentiSpec\Diagnostic\ValidationWarning;
 use IdentiSpec\Enum\ValidationLevel;
 use IdentiSpec\Enum\ValidationStatus;
+use IdentiSpec\Internal\ObjectList;
 use IdentiSpec\Value\IdentifierKey;
 use InvalidArgumentException;
+use SensitiveParameter;
 
 final readonly class ValidationResult
 {
@@ -31,8 +33,7 @@ final readonly class ValidationResult
         private array $warnings,
         private array $transformations,
         private ?RuleSetMetadata $metadata,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<ValidationWarning> $warnings
@@ -40,6 +41,7 @@ final readonly class ValidationResult
      */
     public static function valid(
         IdentifierDefinition $definition,
+        #[SensitiveParameter]
         string $normalizedValue,
         array $warnings = [],
         array $transformations = [],
@@ -48,14 +50,20 @@ final readonly class ValidationResult
             throw new InvalidArgumentException('A valid result requires a non-empty normalized value.');
         }
 
+        $normalizedWarnings = ObjectList::normalize($warnings, ValidationWarning::class);
+        $normalizedTransformations = ObjectList::normalize(
+            $transformations,
+            NormalizationTransformation::class,
+        );
+
         return new self(
             ValidationStatus::VALID,
             $definition->key(),
             $definition->validationLevel(),
             $normalizedValue,
             [],
-            $warnings,
-            $transformations,
+            $normalizedWarnings,
+            $normalizedTransformations,
             $definition->metadata(),
         );
     }
@@ -67,23 +75,31 @@ final readonly class ValidationResult
      */
     public static function invalid(
         IdentifierDefinition $definition,
+        #[SensitiveParameter]
         ?string $normalizedValue,
         array $issues,
         array $warnings = [],
         array $transformations = [],
     ): self {
-        if ($issues === []) {
-            throw new InvalidArgumentException('An invalid result requires at least one issue.');
+        if ($normalizedValue === '') {
+            throw new InvalidArgumentException('An invalid result cannot contain an empty normalized value.');
         }
+
+        $normalizedIssues = ObjectList::normalize($issues, ValidationIssue::class, true);
+        $normalizedWarnings = ObjectList::normalize($warnings, ValidationWarning::class);
+        $normalizedTransformations = ObjectList::normalize(
+            $transformations,
+            NormalizationTransformation::class,
+        );
 
         return new self(
             ValidationStatus::INVALID,
             $definition->key(),
             $definition->validationLevel(),
             $normalizedValue,
-            $issues,
-            $warnings,
-            $transformations,
+            $normalizedIssues,
+            $normalizedWarnings,
+            $normalizedTransformations,
             $definition->metadata(),
         );
     }
@@ -172,21 +188,21 @@ final readonly class ValidationResult
             'identifier_type' => $this->key->identifierType(),
             'masked_value' => $this->normalizedValue === null ? null : '[REDACTED]',
             'issues' => array_map(
-                static fn (ValidationIssue $issue): array => [
+                static fn(ValidationIssue $issue): array => [
                     'code' => $issue->code()->value(),
                     'position' => $issue->position(),
                 ],
                 $this->issues,
             ),
             'warnings' => array_map(
-                static fn (ValidationWarning $warning): array => [
+                static fn(ValidationWarning $warning): array => [
                     'code' => $warning->code()->value(),
                     'position' => $warning->position(),
                 ],
                 $this->warnings,
             ),
             'transformations' => array_map(
-                static fn (NormalizationTransformation $transformation): array => [
+                static fn(NormalizationTransformation $transformation): array => [
                     'code' => $transformation->code()->value(),
                     'position' => $transformation->position(),
                 ],

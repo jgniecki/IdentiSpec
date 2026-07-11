@@ -50,7 +50,7 @@ final readonly class ValidatorRegistry
     public function definitions(): array
     {
         return array_map(
-            static fn (IdentifierTypeValidator $validator): IdentifierDefinition => $validator->definition(),
+            static fn(IdentifierTypeValidator $validator): IdentifierDefinition => $validator->definition(),
             $this->all(),
         );
     }

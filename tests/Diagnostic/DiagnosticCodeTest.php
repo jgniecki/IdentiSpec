@@ -37,4 +37,17 @@ final class DiagnosticCodeTest extends TestCase
         yield 'space' => ['INVALID FORMAT'];
     }
 
+    public function testCoreAuthoringCodesAreStable(): void
+    {
+        self::assertSame('INVALID_CHARACTER_CASE', DiagnosticCode::invalidCharacterCase()->value());
+        self::assertSame('INVALID_LENGTH', DiagnosticCode::invalidLength()->value());
+        self::assertSame('INVALID_PREFIX', DiagnosticCode::invalidPrefix()->value());
+        self::assertSame('INVALID_STRUCTURE', DiagnosticCode::invalidStructure()->value());
+        self::assertSame('INVALID_SEGMENT', DiagnosticCode::invalidSegment()->value());
+        self::assertSame('INVALID_CHECKSUM', DiagnosticCode::invalidChecksum()->value());
+        self::assertSame('INVALID_EMBEDDED_VALUE', DiagnosticCode::invalidEmbeddedValue()->value());
+        self::assertSame('NORMALIZATION_NOT_ALLOWED', DiagnosticCode::normalizationNotAllowed()->value());
+        self::assertSame('NORMALIZED_CHARACTER_CASE', DiagnosticCode::normalizedCharacterCase()->value());
+    }
+
 }

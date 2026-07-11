@@ -23,6 +23,8 @@ A new identifier starts with a completed [identifier specification](docs/identif
 
 Do not copy an algorithm from another package without independent confirmation. Cross-library comparison can reveal discrepancies but cannot resolve them without authoritative evidence.
 
+Follow the [validator authoring guide](docs/validator-authoring.md) for definition construction, normalizer selection, explicit result flow, and the internal contract test.
+
 ## Architecture rules
 
 - Implement a validator for one identifier type, not one jurisdiction.
@@ -69,7 +71,7 @@ docker build --tag identispec-dev --file docker/dev/Dockerfile .
 docker run --rm --volume "$PWD:/app" --workdir /app identispec-dev composer install
 ```
 
-Run all Stage 1 quality gates with:
+Run the regular quality gates with:
 
 ```bash
 docker run --rm --volume "$PWD:/app" --workdir /app identispec-dev composer check
@@ -77,11 +79,24 @@ docker run --rm --volume "$PWD:/app" --workdir /app identispec-dev composer chec
 
 The same Composer commands can be run directly when PHP 8.2+ and Composer 2 are available on the host.
 
+Before merging changes that affect executable behavior or performance, also run:
+
+```bash
+composer mutation
+composer benchmark-regression
+```
+
+`composer mutation` requires PCOV and enforces the committed mutation thresholds. `composer benchmark-baseline` intentionally replaces the tracked performance baseline and must be used only when a reviewed performance change establishes a new reference. Apply formatting with `composer format`; CI uses the non-mutating `composer style` check.
+
 ## Test expectations
 
 Every validator is required to pass common contract tests and its identifier-specific corpus. Tests must cover arbitrary strings without uncontrolled exceptions, deterministic output, normalization boundaries, declared capabilities, unsupported keys, safe serialization, and absence of network access.
 
+First-party validators extend `IdentifierTypeValidatorContractTestCase` under `tests/Contract`. The shared contract supplements rather than replaces tests for domain rules and lenient formatting.
+
 PHPUnit runs on PHP 8.2 through 8.5 in CI. PHPStan runs at level `max` without a baseline. New code must keep both gates green.
+
+Deterministic fuzz tests use fixed seeds so failures are reproducible. Do not replace them with nondeterministic randomness. Changes to production code must keep MSI at least 90%, covered MSI at least 95%, and benchmark regression within 20% of the PHP 8.2 baseline.
 
 ## Documentation maintenance
 

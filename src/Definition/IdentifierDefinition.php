@@ -7,6 +7,7 @@ namespace IdentiSpec\Definition;
 use IdentiSpec\Enum\IdentifierCategory;
 use IdentiSpec\Enum\ValidationCapability;
 use IdentiSpec\Enum\ValidationLevel;
+use IdentiSpec\Internal\ObjectList;
 use IdentiSpec\Value\IdentifierKey;
 use InvalidArgumentException;
 
@@ -34,20 +35,54 @@ final readonly class IdentifierDefinition
             throw new InvalidArgumentException('Identifier display name cannot be empty.');
         }
 
-        if ($capabilities === []) {
-            throw new InvalidArgumentException('Identifier must declare at least one validation capability.');
+        $normalizedCapabilities = ObjectList::normalize(
+            $capabilities,
+            ValidationCapability::class,
+            false,
+        );
+        $indexedCapabilities = [];
+
+        foreach ($normalizedCapabilities as $capability) {
+            if (isset($indexedCapabilities[$capability->value])) {
+                throw new InvalidArgumentException(sprintf(
+                    'Validation capability %s is declared more than once.',
+                    $capability->value,
+                ));
+            }
+
+            $indexedCapabilities[$capability->value] = $capability;
         }
 
-        $uniqueCapabilities = [];
+        foreach ([ValidationCapability::CHARACTERS, ValidationCapability::LENGTH] as $requiredCapability) {
+            if (!isset($indexedCapabilities[$requiredCapability->value])) {
+                throw new InvalidArgumentException(sprintf(
+                    'Identifier must declare the %s capability.',
+                    $requiredCapability->value,
+                ));
+            }
+        }
 
-        foreach ($capabilities as $capability) {
-            $uniqueCapabilities[$capability->value] = $capability;
+        $hasChecksum = isset($indexedCapabilities[ValidationCapability::CHECKSUM->value]);
+
+        if ($this->validationLevel === ValidationLevel::FORMAT_ONLY && $hasChecksum) {
+            throw new InvalidArgumentException('FORMAT_ONLY cannot declare the CHECKSUM capability.');
+        }
+
+        if ($this->validationLevel === ValidationLevel::FORMAT_AND_CHECKSUM && !$hasChecksum) {
+            throw new InvalidArgumentException('FORMAT_AND_CHECKSUM requires the CHECKSUM capability.');
+        }
+
+        if (
+            $this->canonicalFormat->literalPrefix() !== null
+            && !isset($indexedCapabilities[ValidationCapability::PREFIX->value])
+        ) {
+            throw new InvalidArgumentException('A literal prefix requires the PREFIX capability.');
         }
 
         $this->displayName = $displayName;
         /** @var non-empty-list<ValidationCapability> $normalizedCapabilities */
-        $normalizedCapabilities = array_values($uniqueCapabilities);
-        $this->capabilities = $normalizedCapabilities;
+        $capabilityList = array_values($indexedCapabilities);
+        $this->capabilities = $capabilityList;
     }
 
     public function key(): IdentifierKey
@@ -79,6 +114,11 @@ final readonly class IdentifierDefinition
     public function capabilities(): array
     {
         return $this->capabilities;
+    }
+
+    public function hasCapability(ValidationCapability $capability): bool
+    {
+        return in_array($capability, $this->capabilities, true);
     }
 
     public function metadata(): RuleSetMetadata

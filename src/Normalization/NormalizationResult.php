@@ -6,7 +6,9 @@ namespace IdentiSpec\Normalization;
 
 use IdentiSpec\Diagnostic\NormalizationTransformation;
 use IdentiSpec\Diagnostic\ValidationIssue;
+use IdentiSpec\Internal\ObjectList;
 use InvalidArgumentException;
+use SensitiveParameter;
 
 final readonly class NormalizationResult
 {
@@ -18,19 +20,26 @@ final readonly class NormalizationResult
         private ?string $normalizedValue,
         private array $issues,
         private array $transformations,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<NormalizationTransformation> $transformations
      */
-    public static function success(string $normalizedValue, array $transformations = []): self
-    {
+    public static function success(
+        #[SensitiveParameter]
+        string $normalizedValue,
+        array $transformations = [],
+    ): self {
         if ($normalizedValue === '') {
             throw new InvalidArgumentException('Successful normalization requires a non-empty value.');
         }
 
-        return new self($normalizedValue, [], $transformations);
+        $normalizedTransformations = ObjectList::normalize(
+            $transformations,
+            NormalizationTransformation::class,
+        );
+
+        return new self($normalizedValue, [], $normalizedTransformations);
     }
 
     /**
@@ -39,11 +48,13 @@ final readonly class NormalizationResult
      */
     public static function failure(array $issues, array $transformations = []): self
     {
-        if ($issues === []) {
-            throw new InvalidArgumentException('Failed normalization requires at least one issue.');
-        }
+        $normalizedIssues = ObjectList::normalize($issues, ValidationIssue::class, true);
+        $normalizedTransformations = ObjectList::normalize(
+            $transformations,
+            NormalizationTransformation::class,
+        );
 
-        return new self(null, $issues, $transformations);
+        return new self(null, $normalizedIssues, $normalizedTransformations);
     }
 
     public function isSuccessful(): bool

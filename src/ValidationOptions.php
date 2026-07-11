@@ -10,8 +10,7 @@ final readonly class ValidationOptions
 {
     public function __construct(
         private ValidationMode $mode = ValidationMode::STRICT,
-    ) {
-    }
+    ) {}
 
     public function mode(): ValidationMode
     {

@@ -19,6 +19,7 @@ use IdentiSpec\Enum\ValidationLevel;
 use IdentiSpec\ValidationOptions;
 use IdentiSpec\ValidationResult;
 use IdentiSpec\Value\IdentifierKey;
+use SensitiveParameter;
 
 final class TestIdentifierTypeValidator implements IdentifierTypeValidator
 {
@@ -58,8 +59,11 @@ final class TestIdentifierTypeValidator implements IdentifierTypeValidator
         return $this->definition;
     }
 
-    public function validate(string $value, ValidationOptions $options): ValidationResult
-    {
+    public function validate(
+        #[SensitiveParameter]
+        string $value,
+        ValidationOptions $options,
+    ): ValidationResult {
         $this->lastValue = $value;
         $this->lastOptions = $options;
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace IdentiSpec\Diagnostic;
 
 use InvalidArgumentException;
+use SensitiveParameter;
 
 final readonly class ValidationIssue
 {
@@ -17,6 +18,7 @@ final readonly class ValidationIssue
     public function __construct(
         private DiagnosticCode $code,
         private ?int $position = null,
+        #[SensitiveParameter]
         array $context = [],
     ) {
         if ($position !== null && $position < 0) {

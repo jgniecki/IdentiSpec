@@ -7,14 +7,14 @@ namespace IdentiSpec;
 use IdentiSpec\Enum\ValidationStatus;
 use IdentiSpec\Exception\InconsistentValidationResult;
 use IdentiSpec\Registry\ValidatorRegistry;
+use SensitiveParameter;
 
 final readonly class IdentifierValidator
 {
-    public function __construct(private ValidatorRegistry $registry)
-    {
-    }
+    public function __construct(private ValidatorRegistry $registry) {}
 
     public function validate(
+        #[SensitiveParameter]
         IdentifierInput $input,
         ?ValidationOptions $options = null,
     ): ValidationResult {

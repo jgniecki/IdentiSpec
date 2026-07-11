@@ -7,6 +7,9 @@
     "php": ">=8.2.0"
   },
   "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.90",
+    "infection/infection": "^0.32",
+    "phpbench/phpbench": "^1.4",
     "phpstan/phpstan": "^2.1",
     "phpstan/phpstan-phpunit": "^2.0",
     "phpunit/phpunit": "^11.5"
@@ -34,12 +37,34 @@
       "name": "IdentiSpec Contributors"
     }
   ],
+  "config": {
+    "allow-plugins": {
+      "infection/extension-installer": false
+    },
+    "platform": {
+      "php": "8.2.0"
+    },
+    "process-timeout": 600,
+    "sort-packages": true
+  },
   "scripts": {
     "validate-manifest": "composer validate --strict",
+    "security-audit": [
+      "composer audit --locked --abandoned=report",
+      "composer check-platform-reqs --lock"
+    ],
+    "format": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
+    "style": "php-cs-fixer check --config=.php-cs-fixer.dist.php --diff --using-cache=no",
     "test": "phpunit --configuration phpunit.xml.dist",
-    "analyse": "phpstan analyse --configuration phpstan.neon.dist --no-progress",
+    "analyse": "phpstan analyse --configuration phpstan.neon.dist --no-progress --memory-limit=1G",
+    "mutation": "infection --configuration=infection.json5 --threads=max --no-progress --only-covering-test-cases",
+    "benchmark": "php -d pcov.enabled=0 vendor/bin/phpbench run --config=phpbench.json --report=aggregate --retry-threshold=10",
+    "benchmark-baseline": "php -d pcov.enabled=0 vendor/bin/phpbench run --config=phpbench.json --iterations=10 --dump-file=tests/Benchmark/stage3-baseline.xml",
+    "benchmark-regression": "php -d pcov.enabled=0 vendor/bin/phpbench run --config=phpbench.json --file=tests/Benchmark/stage3-baseline.xml --report=aggregate --iterations=5 --retry-threshold=10 --assert=\"mode(variant.time.avg) <= mode(baseline.time.avg) +/- 20%\" --assert=\"rstdev(variant.time.avg) <= 10\"",
     "check": [
       "@validate-manifest",
+      "@security-audit",
+      "@style",
       "@test",
       "@analyse"
     ]

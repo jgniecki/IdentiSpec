@@ -41,7 +41,7 @@ final class ValidatorRegistryTest extends TestCase
         self::assertSame(
             ['AA:FIRST', 'ZZ:LAST'],
             array_map(
-                static fn ($definition): string => $definition->key()->toString(),
+                static fn($definition): string => $definition->key()->toString(),
                 $registry->definitions(),
             ),
         );

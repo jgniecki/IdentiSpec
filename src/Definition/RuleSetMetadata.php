@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace IdentiSpec\Definition;
 
 use DateTimeImmutable;
+use IdentiSpec\Internal\ObjectList;
 use InvalidArgumentException;
 
 final readonly class RuleSetMetadata
@@ -28,7 +29,7 @@ final readonly class RuleSetMetadata
         $ruleSetId = trim($ruleSetId);
         $version = trim($version);
 
-        if (preg_match('/\A[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*\z/D', $ruleSetId) !== 1) {
+        if (preg_match('/\A[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*\z/', $ruleSetId) !== 1) {
             throw new InvalidArgumentException('Rule-set identifier must use UPPER_SNAKE_CASE.');
         }
 
@@ -36,8 +37,18 @@ final readonly class RuleSetMetadata
             throw new InvalidArgumentException('Rule-set version cannot be empty.');
         }
 
-        if ($sources === []) {
-            throw new InvalidArgumentException('Rule-set metadata must contain at least one source.');
+        $normalizedSources = ObjectList::normalize($sources, RuleSource::class, true);
+        $sourceReferences = [];
+
+        foreach ($normalizedSources as $source) {
+            if (in_array($source->reference(), $sourceReferences, true)) {
+                throw new InvalidArgumentException(sprintf(
+                    'Rule source reference %s is declared more than once.',
+                    $source->reference(),
+                ));
+            }
+
+            $sourceReferences[] = $source->reference();
         }
 
         if ($effectiveFrom !== null && $effectiveTo !== null && $effectiveFrom > $effectiveTo) {
@@ -47,7 +58,6 @@ final readonly class RuleSetMetadata
         $this->ruleSetId = $ruleSetId;
         $this->version = $version;
         /** @var non-empty-list<RuleSource> $normalizedSources */
-        $normalizedSources = $sources;
         $this->sources = $normalizedSources;
     }
 

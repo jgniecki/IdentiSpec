@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace IdentiSpec;
 
 use IdentiSpec\Value\IdentifierKey;
+use SensitiveParameter;
 
 final readonly class IdentifierInput
 {
@@ -13,6 +14,7 @@ final readonly class IdentifierInput
     public function __construct(
         string $jurisdictionCode,
         string $identifierType,
+        #[SensitiveParameter]
         private string $value,
     ) {
         $this->key = IdentifierKey::fromParts($jurisdictionCode, $identifierType);

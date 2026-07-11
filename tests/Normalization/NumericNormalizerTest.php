@@ -29,13 +29,13 @@ final class NumericNormalizerTest extends TestCase
         self::assertTrue($result->isSuccessful());
         self::assertSame('12345', $result->normalizedValue());
         self::assertSame([2, 3, 6], array_map(
-            static fn ($transformation): int => $transformation->position(),
+            static fn($transformation): int => $transformation->position(),
             $result->transformations(),
         ));
         self::assertSame(
             ['-', 'SPACE', '-'],
             array_map(
-                static fn ($transformation): mixed => $transformation->context()['separator'],
+                static fn($transformation): mixed => $transformation->context()['separator'],
                 $result->transformations(),
             ),
         );
@@ -96,5 +96,15 @@ final class NumericNormalizerTest extends TestCase
         $second = $normalizer->normalize('12-34', ValidationMode::LENIENT);
 
         self::assertEquals($first, $second);
+    }
+
+    public function testSharedSeparatorInternalsDoNotChangeNumericBehavior(): void
+    {
+        $normalizer = new NumericNormalizer(['A']);
+        $result = $normalizer->normalize('12A34', ValidationMode::LENIENT);
+
+        self::assertTrue($result->isSuccessful());
+        self::assertSame('1234', $result->normalizedValue());
+        self::assertSame(2, $result->transformations()[0]->position());
     }
 }

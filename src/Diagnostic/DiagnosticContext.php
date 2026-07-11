@@ -9,9 +9,7 @@ use InvalidArgumentException;
 /** @internal */
 final class DiagnosticContext
 {
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * @return array<string, scalar|null>

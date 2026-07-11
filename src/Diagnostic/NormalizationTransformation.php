@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace IdentiSpec\Diagnostic;
 
 use InvalidArgumentException;
+use SensitiveParameter;
 
 final readonly class NormalizationTransformation
 {
@@ -17,6 +18,7 @@ final readonly class NormalizationTransformation
     public function __construct(
         private DiagnosticCode $code,
         private int $position,
+        #[SensitiveParameter]
         array $context = [],
     ) {
         if ($position < 0) {

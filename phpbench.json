@@ -1,0 +1,12 @@
+{
+  "$schema": "./vendor/phpbench/phpbench/phpbench.schema.json",
+  "runner.bootstrap": "vendor/autoload.php",
+  "runner.path": "tests/Benchmark",
+  "runner.php_config": {
+    "pcov.enabled": 0
+  },
+  "runner.iterations": 5,
+  "runner.revs": 10000,
+  "runner.warmup": 2,
+  "runner.retry_threshold": null
+}

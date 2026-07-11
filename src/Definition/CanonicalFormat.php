@@ -48,8 +48,21 @@ final readonly class CanonicalFormat
         if ($literalPrefix !== null) {
             $literalPrefix = trim($literalPrefix);
 
-            if ($literalPrefix === '' || preg_match('/\A[A-Z0-9]+\z/D', $literalPrefix) !== 1) {
+            if ($literalPrefix === '' || preg_match('/\A[A-Z0-9]+\z/', $literalPrefix) !== 1) {
                 throw new InvalidArgumentException('Literal prefix must use uppercase ASCII letters or digits.');
+            }
+
+            if (
+                $this->characterSet === CharacterSet::DIGITS
+                && preg_match('/\A[0-9]+\z/', $literalPrefix) !== 1
+            ) {
+                throw new InvalidArgumentException('A DIGITS canonical format cannot declare a letter prefix.');
+            }
+
+            foreach ($uniqueLengths as $length) {
+                if (strlen($literalPrefix) > $length) {
+                    throw new InvalidArgumentException('Literal prefix cannot exceed a canonical length.');
+                }
             }
         }
 

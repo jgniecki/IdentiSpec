@@ -14,6 +14,7 @@ use IdentiSpec\ValidationResult;
 use IdentiSpec\Value\IdentifierKey;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 final class ValidationResultTest extends TestCase
 {
@@ -34,6 +35,31 @@ final class ValidationResultTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         ValidationResult::invalid(TestIdentifierTypeValidator::definitionFor(), null, []);
+    }
+
+    public function testInvalidFactoryRejectsEmptyNormalizedValue(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        ValidationResult::invalid(
+            TestIdentifierTypeValidator::definitionFor(),
+            '',
+            [new ValidationIssue(DiagnosticCode::invalidFormat())],
+        );
+    }
+
+    public function testRuntimeRejectsInvalidDiagnosticCollectionItem(): void
+    {
+        $method = new ReflectionMethod(ValidationResult::class, 'valid');
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $method->invoke(
+            null,
+            TestIdentifierTypeValidator::definitionFor(),
+            'OK',
+            [new \stdClass()],
+        );
     }
 
     public function testUnsupportedHasNoRuleSetOrNormalizedValue(): void
@@ -73,5 +99,31 @@ final class ValidationResultTest extends TestCase
             ['code' => 'INVALID_FORMAT', 'position' => 1],
             $safe['issues'][0],
         );
+        self::assertSame([
+            'status' => 'INVALID',
+            'level' => 'FORMAT_ONLY',
+            'jurisdiction_code' => 'XX',
+            'identifier_type' => 'TEST',
+            'masked_value' => '[REDACTED]',
+            'issues' => [['code' => 'INVALID_FORMAT', 'position' => 1]],
+            'warnings' => [['code' => 'TEST_WARNING', 'position' => 0]],
+            'transformations' => [['code' => 'REMOVED_SEPARATOR', 'position' => 1]],
+            'rule_set' => ['id' => 'XX_TEST', 'version' => '1.0.0'],
+        ], $safe);
+    }
+
+    public function testUnsupportedSafeArrayHasExactStableShape(): void
+    {
+        self::assertSame([
+            'status' => 'UNSUPPORTED',
+            'level' => null,
+            'jurisdiction_code' => 'YY',
+            'identifier_type' => 'UNKNOWN',
+            'masked_value' => null,
+            'issues' => [['code' => 'UNSUPPORTED_IDENTIFIER', 'position' => null]],
+            'warnings' => [],
+            'transformations' => [],
+            'rule_set' => null,
+        ], ValidationResult::unsupported(IdentifierKey::fromParts('YY', 'UNKNOWN'))->toSafeArray());
     }
 }
