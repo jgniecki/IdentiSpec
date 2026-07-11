@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+namespace IdentiSpec\Tests\Checksum\PL;
+
+use IdentiSpec\Checksum\PL\NipChecksum;
+use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+
+final class NipChecksumTest extends TestCase
+{
+    #[DataProvider('validValues')]
+    public function testAcceptsValidNipChecksums(string $value): void
+    {
+        self::assertTrue((new NipChecksum())->isValid($value));
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function validValues(): iterable
+    {
+        yield 'checksum-valid example 1' => ['5260250995'];
+        yield 'checksum-valid example 2' => ['1234563218'];
+        yield 'checksum-valid example 3' => ['8567346215'];
+        yield 'leading one' => ['1000000006'];
+    }
+
+    #[DataProvider('invalidChecksums')]
+    public function testRejectsInvalidNipChecksums(string $value): void
+    {
+        self::assertFalse((new NipChecksum())->isValid($value));
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function invalidChecksums(): iterable
+    {
+        yield 'wrong check digit' => ['5260250994'];
+        yield 'remainder ten' => ['1234567890'];
+    }
+
+    #[DataProvider('invalidInputs')]
+    public function testRejectsInputsOutsideChecksumContract(string $value): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new NipChecksum())->isValid($value);
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function invalidInputs(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'too short' => ['526025099'];
+        yield 'too long' => ['52602509955'];
+        yield 'letter' => ['52602A0995'];
+        yield 'separator' => ['526-025-095'];
+        yield 'nul byte' => ["526025099\0"];
+    }
+}
