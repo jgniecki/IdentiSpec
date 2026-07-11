@@ -16,12 +16,13 @@ final readonly class CanonicalFormat
 
     /**
      * @param list<int> $lengths
+     * @param PrefixDefinition|string|null $prefix A string is retained for backward compatibility and means REQUIRED.
      */
     public function __construct(
         string $description,
         private CharacterSet $characterSet,
         array $lengths,
-        ?PrefixDefinition $prefix = null,
+        PrefixDefinition|string|null $prefix = null,
     ) {
         $description = trim($description);
 
@@ -44,6 +45,11 @@ final readonly class CanonicalFormat
         }
 
         sort($uniqueLengths);
+
+        if (is_string($prefix)) {
+            $prefix = PrefixDefinition::required($prefix);
+        }
+
         $prefix ??= PrefixDefinition::none();
 
         if ($prefix->includedInCanonicalValue()) {
@@ -94,5 +100,11 @@ final readonly class CanonicalFormat
     public function prefix(): PrefixDefinition
     {
         return $this->prefix;
+    }
+
+    /** @deprecated Use prefix()->literal(). */
+    public function literalPrefix(): ?string
+    {
+        return $this->prefix->literal();
     }
 }
