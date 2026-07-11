@@ -12,7 +12,7 @@ final readonly class CanonicalFormat
     /** @var non-empty-list<positive-int> */
     private array $lengths;
     private string $description;
-    private ?string $literalPrefix;
+    private PrefixDefinition $prefix;
 
     /**
      * @param list<int> $lengths
@@ -21,7 +21,7 @@ final readonly class CanonicalFormat
         string $description,
         private CharacterSet $characterSet,
         array $lengths,
-        ?string $literalPrefix = null,
+        ?PrefixDefinition $prefix = null,
     ) {
         $description = trim($description);
 
@@ -44,23 +44,24 @@ final readonly class CanonicalFormat
         }
 
         sort($uniqueLengths);
+        $prefix ??= PrefixDefinition::none();
 
-        if ($literalPrefix !== null) {
-            $literalPrefix = trim($literalPrefix);
+        if ($prefix->includedInCanonicalValue()) {
+            $literal = $prefix->literal();
 
-            if ($literalPrefix === '' || preg_match('/\A[A-Z0-9]+\z/', $literalPrefix) !== 1) {
-                throw new InvalidArgumentException('Literal prefix must use uppercase ASCII letters or digits.');
+            if ($literal === null) {
+                throw new InvalidArgumentException('A canonical prefix requires a literal value.');
             }
 
             if (
                 $this->characterSet === CharacterSet::DIGITS
-                && preg_match('/\A[0-9]+\z/', $literalPrefix) !== 1
+                && preg_match('/\A[0-9]+\z/', $literal) !== 1
             ) {
-                throw new InvalidArgumentException('A DIGITS canonical format cannot declare a letter prefix.');
+                throw new InvalidArgumentException('A DIGITS canonical format cannot include a letter prefix.');
             }
 
             foreach ($uniqueLengths as $length) {
-                if (strlen($literalPrefix) > $length) {
+                if (strlen($literal) > $length) {
                     throw new InvalidArgumentException('Literal prefix cannot exceed a canonical length.');
                 }
             }
@@ -71,7 +72,7 @@ final readonly class CanonicalFormat
 
         $this->description = $description;
         $this->lengths = $normalizedLengths;
-        $this->literalPrefix = $literalPrefix;
+        $this->prefix = $prefix;
     }
 
     public function description(): string
@@ -90,8 +91,8 @@ final readonly class CanonicalFormat
         return $this->lengths;
     }
 
-    public function literalPrefix(): ?string
+    public function prefix(): PrefixDefinition
     {
-        return $this->literalPrefix;
+        return $this->prefix;
     }
 }
