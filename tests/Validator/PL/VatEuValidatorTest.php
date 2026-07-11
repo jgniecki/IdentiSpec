@@ -6,6 +6,7 @@ namespace IdentiSpec\Tests\Validator\PL;
 
 use IdentiSpec\Contract\IdentifierTypeValidator;
 use IdentiSpec\Diagnostic\DiagnosticCode;
+use IdentiSpec\Diagnostic\NormalizationTransformation;
 use IdentiSpec\Enum\PrefixPolicy;
 use IdentiSpec\Enum\ValidationCapability;
 use IdentiSpec\Enum\ValidationLevel;
@@ -22,6 +23,7 @@ final class VatEuValidatorTest extends IdentifierTypeValidatorContractTestCase
         return new VatEuValidator();
     }
 
+    /** @return iterable<string> */
     protected function validExamples(): iterable
     {
         yield 'checksum-valid example 1' => 'PL5260250995';
@@ -29,6 +31,7 @@ final class VatEuValidatorTest extends IdentifierTypeValidatorContractTestCase
         yield 'checksum-valid example 3' => 'PL8567346215';
     }
 
+    /** @return iterable<string> */
     protected function invalidExamples(): iterable
     {
         yield 'empty' => '';
@@ -94,7 +97,7 @@ final class VatEuValidatorTest extends IdentifierTypeValidatorContractTestCase
                 'REMOVED_SEPARATOR',
             ],
             array_map(
-                static fn($transformation): string => $transformation->code()->value(),
+                static fn(NormalizationTransformation $transformation): string => $transformation->code()->value(),
                 $result->transformations(),
             ),
         );
